@@ -1,0 +1,9 @@
+pandas==2.2.1
+sqlalchemy==2.0.28
+pydantic==2.6.4
+requests==2.31.0
+python-dotenv==1.0.1
+geopy==2.4.1
+thefuzz==0.22.1
+click==8.1.7
+pyproj==3.6.1
