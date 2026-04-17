@@ -1,0 +1,18 @@
+# [General]
+.DS_Store
+__pycache__/
+*.py[cod]
+*.swp
+
+# [Track A: seoul-stay-market-research]
+seoul-stay-market-research/data/*.db
+seoul-stay-market-research/venv/
+seoul-stay-market-research/.env
+
+# [Track B: ota-market-research]
+ota-market-research/data/*.db
+ota-market-research/venv/
+ota-market-research/.env
+
+# [Common Data]
+data/*.db
