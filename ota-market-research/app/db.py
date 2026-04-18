@@ -18,6 +18,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     from .models.ota_property_raw import Base
+    from .models.ota_room_offer_raw import OTARoomOfferRaw
     from .models.ota_property_entity import OTAPropertyEntity, OTASnapshot
     
     # Create all tables

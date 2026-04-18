@@ -27,9 +27,13 @@ class OTASnapshot(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     
-    # [Reference] ota_property_raw 또는 매핑 ID와 연결
-    raw_listing_id = Column(Integer, ForeignKey("ota_property_raw.id"), index=True)
+    # [Reference]
+    property_raw_id = Column(Integer, ForeignKey("ota_property_raw.id"), index=True)
+    room_offer_raw_id = Column(Integer, ForeignKey("ota_room_offer_raw.id"), index=True)
     ota_property_entity_id = Column(Integer, ForeignKey("ota_property_entity.id"), index=True)
+    
+    # [Offer Context]
+    room_type_name = Column(String) # 스냅샷 시점의 객실명 기록
     
     # [Capture Metadata]
     collected_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)

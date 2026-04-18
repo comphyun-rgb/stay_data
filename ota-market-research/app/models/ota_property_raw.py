@@ -33,6 +33,8 @@ class OTAPropertyRaw(Base):
     
     # [Categorization]
     property_type_raw = Column(String) # e.g., 'Hotel', 'Apartment'
+    property_type_std = Column(String, index=True) # e.g., 'hotel', 'guesthouse', 'hostel'
+    star_rating = Column(Float)
     
     # [Financial Info]
     price_total_krw = Column(Float)
