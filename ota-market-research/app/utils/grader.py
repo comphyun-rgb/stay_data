@@ -1,11 +1,24 @@
-def calculate_location_score(dist_m):
+import math
+
+def calculate_haversine_distance(lat1, lon1, lat2, lon2):
+    # Radius of the Earth in km
+    R = 6371.0
+    
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c * 1000 # Convert to meters
+    return distance
+
+def calculate_location_score(lat, lng, target_lat=37.556, target_lng=126.923):
     """
-    Max 25 points
-    - < 300m: 25
-    - 300-700m: 20
-    - 700-1200m: 12
-    - > 1200m: 5
+    Max 25 points based on distance to center (Hongdae Stn)
     """
+    if not lat or not lng: return 5 # Default for unknown
+    
+    dist_m = calculate_haversine_distance(lat, lng, target_lat, target_lng)
+    
     if dist_m < 300: return 25
     if dist_m < 700: return 20
     if dist_m < 1200: return 12
@@ -56,8 +69,8 @@ def get_internal_grade(total_score):
     return "Budget"
 
 def grade_property(prop_data):
-    # 1. Location (Default to 500m if unknown for now)
-    loc_score = calculate_location_score(prop_data.get('station_distance_m', 500))
+    # 1. Location (Real Coords)
+    loc_score = calculate_location_score(prop_data.get('raw_lat'), prop_data.get('raw_lng'))
     
     # 2. Review
     rev_score = calculate_review_score_component(

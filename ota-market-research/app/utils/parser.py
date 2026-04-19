@@ -9,10 +9,10 @@ class OTAParser:
     @staticmethod
     def classify_analysis_unit(name: str, max_guests: int) -> str:
         """
-        대표 분석 단위 분류:
-        - dorm_1p: 도미토리 1인
-        - double_2p: 일반실 2인 (더블/트윈)
-        - family_4p: 3-4인 다인실
+        비교용 대분류 (room_analysis_type):
+        - dorm_1p: 도미토리 침대
+        - double_2p: 2인실 (더블/트윈)
+        - family_4p: 3-4인실
         """
         name = name.lower()
         if any(kw in name for kw in ['dorm', 'bunk', 'bed in', '객실 내 침대']):
@@ -21,8 +21,6 @@ class OTAParser:
             return 'family_4p'
         if max_guests == 2:
             return 'double_2p'
-        if max_guests == 1:
-            return 'single_1p'
         return 'other'
 
     @staticmethod
@@ -79,3 +77,33 @@ class OTAParser:
         if any(kw in text for kw in ['tax not included', '세금 별도']):
             return 'N'
         return 'Y' # 한국 OTA는 대체로 포함가가 기본
+
+    @staticmethod
+    def parse_facilities(text: str) -> dict:
+        """
+        시설 텍스트에서 주요 항목 추출
+        """
+        text = text.lower()
+        return {
+            "elevator_yn": "Y" if any(kw in text for kw in ['elevator', 'lift', '엘리베이터']) else "N",
+            "parking_yn": "Y" if any(kw in text for kw in ['parking', '주차']) else "N",
+            "breakfast_yn": "Y" if any(kw in text for kw in ['breakfast', '조식']) else "N",
+            "wifi_yn": "Y" if any(kw in text for kw in ['wifi', 'internet', '와이파이']) else "Y", # 기본 제공 가정
+            "kitchen_yn": "Y" if any(kw in text for kw in ['kitchen', '주방']) else "N",
+            "laundry_yn": "Y" if any(kw in text for kw in ['laundry', 'washing', '세탁']) else "N",
+            "aircon_yn": "Y" if any(kw in text for kw in ['air con', 'cooling', '에어컨']) else "Y"
+        }
+
+    @staticmethod
+    def parse_availability(text: str) -> dict:
+        """
+        판매 상태 텍스트에서 상태 코드 추출
+        """
+        text = text.lower()
+        is_sold_out = any(kw in text for kw in ['sold out', '예약 마감', '불가능', 'no longer available'])
+        return {
+            "sold_out_yn": is_sold_out,
+            "bookable_yn": not is_sold_out,
+            "observed_price_yn": not is_sold_out,
+            "availability_text": text
+        }
