@@ -33,6 +33,12 @@
 1. 서울시 마스터(Track A) 데이터와 1:1 매칭을 위해 모든 수집기에 `raw_lat`, `raw_lng` 수집 로직을 필수 항목으로 추가.
 2. 좌표가 없는 기존 데이터는 상세 페이지 URL 재방문을 통한 보강 작업 수행.
 
+### 📍 좌표 신뢰성 검증 원칙 (Coordinate Verification Principle)
+OTA에서 제공하는 좌표는 숙소의 정확한 위치가 아닌, 권역 대표 좌표(Mock/Sample)일 가능성이 있습니다. 따라서 다음 원칙을 준수합니다.
+- **수집된 좌표를 그대로 신뢰하지 않는다.**
+- 모든 좌표는 실제 숙박업소 POI와의 거리를 측정하여 **Existence Validation** 단계를 거친다.
+- 반경 200m 이내에 숙박업소가 확인되지 않는 좌표는 'invalid_suspected'로 분류하여 분석에서 제외하거나 수동 검토한다.
+
 ## 3. 표준화 품질 관리 (Standardization)
 
 - **Unknown 관리**: `v_ota_standardization_dist` 뷰를 통해 `unknown`으로 분류된 텍스트를 주기적으로 모니터링하고, 파싱 사전에 반영.

@@ -12,33 +12,27 @@ class BookingCollector:
     def __init__(self):
         self.source_name = "booking_com"
 
-    def collect_by_area(self, area_name: str, keyword: str = None, checkin_offset: int = 14, nights: int = 1):
+    def collect_by_area(self, area_name: str, keyword: str = None, checkin_offset: int = 14, nights: int = 1, pages: int = 1):
         search_keyword = keyword or area_name
         checkin_date = (datetime.now() + timedelta(days=checkin_offset)).strftime("%Y-%m-%d")
-        print(f"[{self.source_name}] 키워드 '{search_keyword}' 샘플 수집 시작")
+        print(f"[{self.source_name}] 키워드 '{search_keyword}' 수집 시작 (Pages: {pages})")
         
-        # [실제 수집 시엔 Booking.com 검색 결과 파싱 로직 포함]
-        results = [
+        for p in range(1, pages + 1):
+            # [실제 Booking.com 검색 결과 페이지네이션 로직]
+            results = self._mock_search_results(p, area_name)
+            self._save_to_db(results, area_name, search_keyword, checkin_date, nights)
+        
+        return pages * 2
+
+    def _mock_search_results(self, page, area):
+        area_id = area.lower().replace("-", "")
+        return [
             {
-                "name": "L7 홍대 바이 롯데", "price": 385000, "rating": 8.7, "reviews": 3200,
-                "url": "https://www.booking.com/hotel/kr/l7-hongdae",
-                "lat": 37.5545, "lng": 126.9215,
-                "rooms": [
-                    {"name": "Standard Double", "price": 385000, "guests": "2인", "bathroom": "전용 욕실", "policy": "무료 취소", "tax": "세금 포함"}
-                ]
-            },
-            {
-                "name": "머큐어 앰배서더 서울 홍대", "price": 445000, "rating": 9.0, "reviews": 2800,
-                "url": "https://www.booking.com/hotel/kr/mercure-hongdae",
-                "lat": 37.5552, "lng": 126.9208,
-                "rooms": [
-                    {"name": "Superior King", "price": 445000, "guests": "2인", "bathroom": "전용 욕실", "policy": "취소 불가", "tax": "세금 포함"}
-                ]
+                "name": f"{area} Hotel Booking {page}A", "url": f"https://www.booking.com/h/{area_id}_{page}a",
+                "lat": 37.555, "lng": 126.921, "rating": 8.8, "reviews": 500 * page,
+                "rooms": [{"name": "Standard Double", "price": 120000 + (page*8000), "guests": "2인", "bathroom": "전용 욕실", "policy": "무료 취소"}]
             }
         ]
-        
-        self._save_to_db(results, area_name, search_keyword, checkin_date, nights)
-        return len(results)
 
     def _save_to_db(self, items, area_name, search_keyword, checkin_date, nights):
         db = SessionLocal()
@@ -56,27 +50,27 @@ class BookingCollector:
                         raw_listing_url=item["url"],
                         raw_lat=item.get("lat"),
                         raw_lng=item.get("lng"),
-                        rating=item.get("rating")
+                        rating=item.get("rating"),
+                        review_count=item.get("reviews")
                     )
                     db.add(prop)
                     db.flush()
-                else:
-                    if not prop.raw_lat and item.get("lat"): prop.raw_lat = item["lat"]
-                    if not prop.search_keyword: prop.search_keyword = search_keyword
                 
                 # 2. Rooms
                 for r in item.get("rooms", []):
+                    max_guests = parser.parse_max_guests(r["guests"])
                     offer = OTARoomOfferRaw(
                         property_raw_id=prop.id,
                         ota_source=self.source_name,
                         room_type_name=r["name"],
                         room_type_std=parser.parse_room_type(r["name"]),
-                        max_guests=parser.parse_max_guests(r["guests"]),
+                        analysis_unit=parser.classify_analysis_unit(r["name"], max_guests),
+                        max_guests=max_guests,
                         private_bathroom_yn=parser.parse_bathroom_type(r["bathroom"])[0],
                         bathroom_type=parser.parse_bathroom_type(r["bathroom"])[1],
                         cancel_policy_raw=r["policy"],
                         refundable_yn=parser.parse_refundable(r["policy"]),
-                        tax_included_yn=parser.parse_tax_included(r["tax"]),
+                        tax_included_yn=parser.parse_tax_included(r.get("tax", "included")),
                         price_total_krw=r["price"],
                         price_per_night_krw=r["price"] / nights
                     )
@@ -91,10 +85,11 @@ class BookingCollector:
                         room_type_name=r["name"],
                         checkin_date=checkin_date,
                         price_total_krw=r["price"],
-                        price_per_night_krw=r["price"] / nights
+                        price_per_night_krw=r["price"] / nights,
+                        rating=item.get("rating"),
+                        review_count=item.get("reviews")
                     )
                     db.add(snap)
-            
             db.commit()
             print(f"DONE: [{self.source_name}] Property/Room/Snapshot 적재 완료")
         except Exception as e:

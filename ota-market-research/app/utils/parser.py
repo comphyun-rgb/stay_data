@@ -7,6 +7,25 @@ class OTAParser:
     """
     
     @staticmethod
+    def classify_analysis_unit(name: str, max_guests: int) -> str:
+        """
+        대표 분석 단위 분류:
+        - dorm_1p: 도미토리 1인
+        - double_2p: 일반실 2인 (더블/트윈)
+        - family_4p: 3-4인 다인실
+        """
+        name = name.lower()
+        if any(kw in name for kw in ['dorm', 'bunk', 'bed in', '객실 내 침대']):
+            return 'dorm_1p'
+        if max_guests >= 3:
+            return 'family_4p'
+        if max_guests == 2:
+            return 'double_2p'
+        if max_guests == 1:
+            return 'single_1p'
+        return 'other'
+
+    @staticmethod
     def parse_room_type(name: str) -> str:
         name = name.lower()
         if any(kw in name for kw in ['dorm', 'bunk', 'bed in']):

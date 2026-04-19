@@ -20,6 +20,8 @@ def init_db():
     from .models.ota_property_raw import Base
     from .models.ota_room_offer_raw import OTARoomOfferRaw
     from .models.ota_property_entity import OTAPropertyEntity, OTASnapshot
+    from .models.ota_validation import OTACoordinateValidation
+    from .models.ota_mapping import OTAManualMatch
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
