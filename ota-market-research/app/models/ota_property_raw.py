@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, func, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -12,17 +12,25 @@ class OTAPropertyRaw(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     
+    # [0. Internal Link]
+    entity_id = Column(Integer, ForeignKey("ota_property_entity.id"), index=True)
+    
     # [1. Search & Source Info]
     ota_source = Column(String, index=True, nullable=False) # agoda, booking_com, airbnb
+    source_role = Column(String, index=True) # primary (Booking), secondary (Agoda), area_reference (Airbnb)
     raw_listing_name = Column(String, index=True)
     raw_listing_url = Column(String, unique=True)
     raw_listing_id = Column(String, index=True)
     collected_at = Column(DateTime(timezone=True), server_default=func.now())
     
-    # [2. Location Info]
+    # [2. Location & Precision]
     raw_address = Column(String)
     raw_lat = Column(Float)
     raw_lng = Column(Float)
+    geo_precision = Column(String, default="exact") # exact, nearby, approximate_area, hidden
+    area_cluster = Column(String, index=True) # e.g., 'hongdae_main', 'yeonnam_dist'
+    approx_lat = Column(Float) # For Airbnb
+    approx_lng = Column(Float) # For Airbnb
     region_code = Column(String, index=True) # e.g., 'hongdae'
     region_label = Column(String) # e.g., '홍대/연남'
     sub_area = Column(String) # e.g., 'yeonnam'
